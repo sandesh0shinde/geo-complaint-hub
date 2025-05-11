@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 const Profile = () => {
-  const { user, isLoggedIn, logout } = useAuth();
+  const { user, isLoggedIn, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,34 +42,66 @@ const Profile = () => {
         <div className="max-w-3xl mx-auto">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">Your Profile</CardTitle>
-              <CardDescription>Manage your account and view your complaints</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl">Your Profile</CardTitle>
+                  <CardDescription>Manage your account and view your complaints</CardDescription>
+                </div>
+                {isAdmin && (
+                  <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
+                    Administrator
+                  </Badge>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-8">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <div className="bg-municipal-orange text-white h-20 w-20 rounded-full flex items-center justify-center text-2xl font-bold">
+                  <div className={`${isAdmin ? "bg-blue-600" : "bg-municipal-orange"} text-white h-20 w-20 rounded-full flex items-center justify-center text-2xl font-bold`}>
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold">{user.name}</h3>
                     <p className="text-muted-foreground">{user.email}</p>
+                    {isAdmin && (
+                      <p className="text-sm text-blue-600 mt-1">Municipal Administrator</p>
+                    )}
                   </div>
                 </div>
 
-                <div>
-                  <h4 className="text-lg font-semibold mb-2">Your Recent Complaints</h4>
-                  <div className="bg-gray-100 p-6 rounded-md text-center">
-                    <p className="text-muted-foreground">You haven't filed any complaints yet.</p>
-                    <Button 
-                      variant="link" 
-                      onClick={() => navigate("/grievances")}
-                      className="text-municipal-orange"
-                    >
-                      File a new complaint
-                    </Button>
+                {isAdmin ? (
+                  <div>
+                    <h4 className="text-lg font-semibold mb-2">Administration Panel</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Button variant="outline" className="border-gray-300 hover:bg-gray-50">
+                        Manage Grievances
+                      </Button>
+                      <Button variant="outline" className="border-gray-300 hover:bg-gray-50">
+                        User Management
+                      </Button>
+                      <Button variant="outline" className="border-gray-300 hover:bg-gray-50">
+                        Department Settings
+                      </Button>
+                      <Button variant="outline" className="border-gray-300 hover:bg-gray-50">
+                        System Configuration
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <h4 className="text-lg font-semibold mb-2">Your Recent Complaints</h4>
+                    <div className="bg-gray-100 p-6 rounded-md text-center">
+                      <p className="text-muted-foreground">You haven't filed any complaints yet.</p>
+                      <Button 
+                        variant="link" 
+                        onClick={() => navigate("/grievances")}
+                        className="text-municipal-orange"
+                      >
+                        File a new complaint
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
             <CardFooter className="flex justify-between flex-col sm:flex-row gap-4">

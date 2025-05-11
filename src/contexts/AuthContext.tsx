@@ -5,6 +5,7 @@ interface User {
   id: string;
   name: string;
   email: string;
+  isAdmin: boolean;
 }
 
 interface AuthContextType {
@@ -12,6 +13,7 @@ interface AuthContextType {
   isLoggedIn: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,27 +21,48 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // Check local storage for saved user data
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
       setIsLoggedIn(true);
+      setIsAdmin(parsedUser.isAdmin || false);
     }
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Mock login functionality for now - in production, you'd connect to a backend
-    if (email && password) {
+    // Check for admin credentials
+    if (email === "admin@municipal.gov" && password === "admin123") {
+      const adminUser = {
+        id: 'admin1',
+        name: 'Administrator',
+        email: email,
+        isAdmin: true
+      };
+      
+      setUser(adminUser);
+      setIsLoggedIn(true);
+      setIsAdmin(true);
+      localStorage.setItem('user', JSON.stringify(adminUser));
+      return true;
+    }
+    
+    // Regular user login (mock)
+    else if (email && password) {
       const mockUser = {
         id: '1',
         name: email.split('@')[0],
-        email: email
+        email: email,
+        isAdmin: false
       };
       
       setUser(mockUser);
       setIsLoggedIn(true);
+      setIsAdmin(false);
       localStorage.setItem('user', JSON.stringify(mockUser));
       return true;
     }
@@ -49,11 +72,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     setUser(null);
     setIsLoggedIn(false);
+    setIsAdmin(false);
     localStorage.removeItem('user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoggedIn, login, logout, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

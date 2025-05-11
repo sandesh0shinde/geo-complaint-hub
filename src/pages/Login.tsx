@@ -123,6 +123,11 @@ const Login = () => {
                   <Button type="submit" className="w-full bg-municipal-orange hover:bg-orange-600">
                     Sign In
                   </Button>
+                  <div className="mt-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+                    <p className="text-sm text-gray-500 font-medium">Admin Login:</p>
+                    <p className="text-sm text-gray-500">Email: admin@municipal.gov</p>
+                    <p className="text-sm text-gray-500">Password: admin123</p>
+                  </div>
                 </form>
               </TabsContent>
               
