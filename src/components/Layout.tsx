@@ -102,17 +102,17 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Navigation */}
       <nav className="bg-white border-b border-gray-200">
         <div className="container mx-auto">
-          <div className="flex justify-between">
-            <Link to="/about" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100">
+          <div className="flex justify-center">
+            <Link to="/about" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 text-center">
               About MNC
             </Link>
             
             <div 
-              className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 cursor-pointer relative group"
+              className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 cursor-pointer relative group text-center"
               onMouseEnter={() => setZonalOfficesOpen(true)}
               onMouseLeave={() => setZonalOfficesOpen(false)}
             >
-              <div className="flex items-center">
+              <div className="flex items-center justify-center">
                 Zonal offices
                 <ChevronDown className="ml-1 h-4 w-4" />
               </div>
@@ -133,11 +133,11 @@ const Layout = ({ children }: LayoutProps) => {
             </div>
             
             <div 
-              className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 cursor-pointer relative"
+              className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 cursor-pointer relative text-center"
               onMouseEnter={() => setDepartmentsOpen(true)}
               onMouseLeave={() => setDepartmentsOpen(false)}
             >
-              <div className="flex items-center">
+              <div className="flex items-center justify-center">
                 Departments
                 <ChevronDown className="ml-1 h-4 w-4" />
               </div>
@@ -157,15 +157,15 @@ const Layout = ({ children }: LayoutProps) => {
               )}
             </div>
             
-            <Link to="/services" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100">
+            <Link to="/services" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 text-center">
               Services
             </Link>
             
-            <Link to="/grievances" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100">
+            <Link to="/grievances" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 text-center">
               Grievances
             </Link>
             
-            <Link to="/contact" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100">
+            <Link to="/contact" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 text-center">
               Contact us
             </Link>
           </div>

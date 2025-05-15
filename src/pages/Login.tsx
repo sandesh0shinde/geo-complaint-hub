@@ -15,8 +15,26 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  // Email validation function
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Password validation function
+  const isValidPassword = (password: string) => {
+    return password.length >= 6;
+  };
+
+  // Phone number validation
+  const isValidPhoneNumber = (phone: string) => {
+    const phoneRegex = /^\d{10}$/;
+    return phone === "" || phoneRegex.test(phone);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +43,15 @@ const Login = () => {
       toast({
         title: "Error",
         description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid email address",
         variant: "destructive",
       });
       return;
@@ -53,7 +80,25 @@ const Login = () => {
     if (!name || !email || !password || !confirmPassword) {
       toast({
         title: "Error",
-        description: "Please fill in all fields",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isValidPassword(password)) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters long",
         variant: "destructive",
       });
       return;
@@ -63,6 +108,15 @@ const Login = () => {
       toast({
         title: "Error",
         description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (phoneNumber && !isValidPhoneNumber(phoneNumber)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid 10-digit phone number",
         variant: "destructive",
       });
       return;
@@ -134,7 +188,7 @@ const Login = () => {
               <TabsContent value="register">
                 <form onSubmit={handleSignup} className="space-y-4 mt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">Full Name <span className="text-red-500">*</span></Label>
                     <Input
                       id="name"
                       type="text"
@@ -145,7 +199,7 @@ const Login = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="register-email">Email</Label>
+                    <Label htmlFor="register-email">Email <span className="text-red-500">*</span></Label>
                     <Input
                       id="register-email"
                       type="email"
@@ -156,18 +210,28 @@ const Login = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="register-password">Password</Label>
+                    <Label htmlFor="phone-number">Phone Number</Label>
+                    <Input
+                      id="phone-number"
+                      type="tel"
+                      placeholder="10-digit phone number"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="register-password">Password <span className="text-red-500">*</span></Label>
                     <Input
                       id="register-password"
                       type="password"
-                      placeholder="Create a password"
+                      placeholder="Create a password (min. 6 characters)"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <Label htmlFor="confirm-password">Confirm Password <span className="text-red-500">*</span></Label>
                     <Input
                       id="confirm-password"
                       type="password"
@@ -176,6 +240,9 @@ const Login = () => {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                     />
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    <span className="text-red-500">*</span> Required fields
                   </div>
                   <Button type="submit" className="w-full bg-municipal-orange hover:bg-orange-600">
                     Create Account
