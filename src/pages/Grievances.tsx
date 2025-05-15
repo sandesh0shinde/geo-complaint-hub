@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +24,7 @@ const formSchema = z.object({
 });
 
 const Grievances = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const categoryParam = queryParams.get("category") || "";
@@ -36,6 +37,7 @@ const Grievances = () => {
     status: string;
     category: string;
     subject: string;
+    description: string;
   } | null>(null);
   const [showTicket, setShowTicket] = useState(false);
 
@@ -109,7 +111,14 @@ const Grievances = () => {
       status: "Submitted",
       category: data.category,
       subject: data.subject,
+      description: data.description,
     };
+    
+    // Save complaint to localStorage
+    const savedComplaints = localStorage.getItem("userComplaints");
+    const complaints = savedComplaints ? JSON.parse(savedComplaints) : [];
+    complaints.unshift(ticket); // Add new complaint at the beginning
+    localStorage.setItem("userComplaints", JSON.stringify(complaints));
     
     setComplaintTicket(ticket);
     setShowTicket(true);
@@ -118,12 +127,29 @@ const Grievances = () => {
       title: "Complaint Registered",
       description: `Your complaint has been registered successfully. Complaint ID: ${complaintId}`,
     });
+    
+    // Reset form
+    form.reset();
+  };
+
+  const handleViewAllComplaints = () => {
+    navigate('/track-complaints');
   };
 
   return (
     <Layout>
       <div className="container mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-8 text-center">Grievance Redressal System</h1>
+
+        <div className="flex justify-end mb-4">
+          <Button 
+            onClick={handleViewAllComplaints}
+            className="flex items-center gap-2 bg-municipal-orange hover:bg-orange-600"
+          >
+            <Ticket className="h-4 w-4" />
+            Track Your Complaints
+          </Button>
+        </div>
 
         <Card className="mb-8">
           <CardHeader>
@@ -280,10 +306,19 @@ const Grievances = () => {
                 <p className="text-sm text-center text-gray-500">
                   Please save this complaint ID for future reference.
                 </p>
-                <div className="mt-4 flex justify-center">
+                <div className="mt-4 flex justify-center gap-4">
+                  <Button
+                    onClick={() => {
+                      setShowTicket(false);
+                      navigate('/track-complaints');
+                    }}
+                    className="bg-municipal-orange hover:bg-orange-600"
+                  >
+                    View All Complaints
+                  </Button>
                   <Button
                     onClick={() => setShowTicket(false)}
-                    className="bg-municipal-orange hover:bg-orange-600"
+                    variant="outline"
                   >
                     Close
                   </Button>

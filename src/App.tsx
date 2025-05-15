@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import About from "./pages/About";
 import Services from "./pages/Services";
 import Grievances from "./pages/Grievances";
+import TrackComplaints from "./pages/TrackComplaints";
 import Contact from "./pages/Contact";
 import Department from "./pages/Department";
 import ZonalOffice from "./pages/ZonalOffice";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/services" element={<Services />} />
             <Route path="/grievances" element={<Grievances />} />
+            <Route path="/track-complaints" element={<TrackComplaints />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/department/:id" element={<Department />} />
             <Route path="/zonal-office/:id" element={<ZonalOffice />} />

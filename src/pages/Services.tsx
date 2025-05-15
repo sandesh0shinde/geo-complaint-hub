@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
-import { FileText, Home, Droplet, Store, Building, Heart } from "lucide-react";
+import { FileText, Home, Droplet, Store, Building, Heart, Ticket } from "lucide-react";
 
 const Services = () => {
   const services = [
@@ -57,6 +57,15 @@ const Services = () => {
       <div className="container mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-8 text-center">Our Services</h1>
 
+        <div className="flex justify-end mb-4">
+          <Link to="/track-complaints">
+            <Button className="flex items-center gap-2 bg-municipal-orange hover:bg-orange-600">
+              <Ticket className="h-4 w-4" />
+              Track Complaints
+            </Button>
+          </Link>
+        </div>
+
         <Tabs defaultValue="online-services" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="online-services">Online Services</TabsTrigger>
@@ -98,11 +107,19 @@ const Services = () => {
                 <p className="mb-4">
                   You can register complaints related to various municipal services and infrastructure issues. Our team will address your concerns promptly.
                 </p>
-                <Link to="/grievances">
-                  <Button className="bg-municipal-orange hover:bg-orange-600">
-                    Go to Complaints Section
-                  </Button>
-                </Link>
+                <div className="flex gap-4">
+                  <Link to="/grievances">
+                    <Button className="bg-municipal-orange hover:bg-orange-600">
+                      Go to Complaints Section
+                    </Button>
+                  </Link>
+                  <Link to="/track-complaints">
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <Ticket className="h-4 w-4" />
+                      Track Existing Complaints
+                    </Button>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
