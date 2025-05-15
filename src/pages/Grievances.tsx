@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
-import { MapPin } from "lucide-react";
+import { MapPin, FileText, Ticket } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,6 +30,14 @@ const Grievances = () => {
 
   const [locationText, setLocationText] = useState("");
   const [coordinates, setCoordinates] = useState<{lat: number; lng: number} | null>(null);
+  const [complaintTicket, setComplaintTicket] = useState<{
+    id: string;
+    date: string;
+    status: string;
+    category: string;
+    subject: string;
+  } | null>(null);
+  const [showTicket, setShowTicket] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,16 +55,31 @@ const Grievances = () => {
         (position) => {
           const { latitude, longitude } = position.coords;
           setCoordinates({ lat: latitude, lng: longitude });
-          setLocationText(`Lat: ${latitude.toFixed(6)}, Long: ${longitude.toFixed(6)}`);
           
-          // You would normally use a reverse geocoding service here
-          // For now, we'll just use the coordinates
-          form.setValue("location", `${latitude.toFixed(6)},${longitude.toFixed(6)}`);
-          
-          toast({
-            title: "Location detected",
-            description: `Coordinates captured successfully`,
-          });
+          // Reverse geocoding using free Nominatim API
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`)
+            .then(response => response.json())
+            .then(data => {
+              const address = data.display_name;
+              setLocationText(address);
+              form.setValue("location", address);
+              
+              toast({
+                title: "Location detected",
+                description: `Address captured successfully`,
+              });
+            })
+            .catch(error => {
+              console.error("Error fetching location details:", error);
+              const locText = `Lat: ${latitude.toFixed(6)}, Long: ${longitude.toFixed(6)}`;
+              setLocationText(locText);
+              form.setValue("location", locText);
+              
+              toast({
+                title: "Location detected",
+                description: `Coordinates captured successfully`,
+              });
+            });
         },
         (error) => {
           toast({
@@ -75,13 +99,25 @@ const Grievances = () => {
   };
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
+    const complaintId = "MNC" + Math.floor(100000 + Math.random() * 900000);
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Generate complaint ticket
+    const ticket = {
+      id: complaintId,
+      date: today,
+      status: "Submitted",
+      category: data.category,
+      subject: data.subject,
+    };
+    
+    setComplaintTicket(ticket);
+    setShowTicket(true);
+    
     toast({
       title: "Complaint Registered",
-      description: "Your complaint has been registered successfully. Complaint ID: MNC" + Math.floor(100000 + Math.random() * 900000),
+      description: `Your complaint has been registered successfully. Complaint ID: ${complaintId}`,
     });
-    form.reset();
-    setLocationText("");
-    setCoordinates(null);
   };
 
   return (
@@ -202,6 +238,60 @@ const Grievances = () => {
             </Form>
           </CardContent>
         </Card>
+
+        {complaintTicket && (
+          <Dialog open={showTicket} onOpenChange={setShowTicket}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center">
+                  <Ticket className="w-6 h-6 mr-2" /> Complaint Ticket Generated
+                </DialogTitle>
+                <DialogDescription>
+                  Your complaint has been registered successfully
+                </DialogDescription>
+              </DialogHeader>
+              <div className="p-6">
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-gray-500 text-sm">Complaint ID</p>
+                      <p className="font-medium">{complaintTicket.id}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-sm">Date</p>
+                      <p className="font-medium">{complaintTicket.date}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-sm">Status</p>
+                      <p className="bg-amber-100 text-amber-800 inline-block px-2 py-1 rounded text-xs font-semibold">
+                        {complaintTicket.status}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-sm">Category</p>
+                      <p className="font-medium capitalize">{complaintTicket.category}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <p className="text-gray-500 text-sm">Subject</p>
+                    <p className="font-medium">{complaintTicket.subject}</p>
+                  </div>
+                </div>
+                <p className="text-sm text-center text-gray-500">
+                  Please save this complaint ID for future reference.
+                </p>
+                <div className="mt-4 flex justify-center">
+                  <Button
+                    onClick={() => setShowTicket(false)}
+                    className="bg-municipal-orange hover:bg-orange-600"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
 
         <div className="mt-12">
           <h2 className="text-2xl font-semibold mb-6">Common Complaint Categories</h2>

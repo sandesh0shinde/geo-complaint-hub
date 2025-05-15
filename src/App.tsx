@@ -16,6 +16,14 @@ import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import { AuthProvider } from "./contexts/AuthContext";
 
+// Import Service Pages
+import BirthDeathCertificate from "./pages/ServicePages/BirthDeathCertificate";
+import PropertyTaxPage from "./pages/ServicePages/PropertyTaxPage";
+import WaterBillPage from "./pages/ServicePages/WaterBillPage";
+import TradeLicensePage from "./pages/ServicePages/TradeLicensePage";
+import BuildingPermitPage from "./pages/ServicePages/BuildingPermitPage";
+import MarriageRegistrationPage from "./pages/ServicePages/MarriageRegistrationPage";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -35,6 +43,15 @@ const App = () => (
             <Route path="/zonal-office/:id" element={<ZonalOffice />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
+            
+            {/* Service Routes */}
+            <Route path="/services/birth-death-certificate" element={<BirthDeathCertificate />} />
+            <Route path="/services/property-tax" element={<PropertyTaxPage />} />
+            <Route path="/services/water-bill" element={<WaterBillPage />} />
+            <Route path="/services/trade-license" element={<TradeLicensePage />} />
+            <Route path="/services/building-permit" element={<BuildingPermitPage />} />
+            <Route path="/services/marriage-registration" element={<MarriageRegistrationPage />} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

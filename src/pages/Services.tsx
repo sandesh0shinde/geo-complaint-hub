@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
+import { FileText, Home, Droplet, Store, Building, Heart } from "lucide-react";
 
 const Services = () => {
   const services = [
@@ -11,37 +12,43 @@ const Services = () => {
       id: 'birth-death',
       title: 'Birth & Death Certificates',
       description: 'Apply for birth or death certificates',
-      icon: '📝',
+      icon: <FileText className="h-6 w-6" />,
+      path: '/services/birth-death-certificate'
     },
     {
       id: 'property-tax',
       title: 'Property Tax',
       description: 'Pay your property tax online',
-      icon: '🏠',
+      icon: <Home className="h-6 w-6" />,
+      path: '/services/property-tax'
     },
     {
       id: 'water-bill',
       title: 'Water Bill Payment',
       description: 'Pay your water bills online',
-      icon: '💧',
+      icon: <Droplet className="h-6 w-6" />,
+      path: '/services/water-bill'
     },
     {
       id: 'trade-license',
       title: 'Trade License',
       description: 'Apply for new trade license or renewal',
-      icon: '🏪',
+      icon: <Store className="h-6 w-6" />,
+      path: '/services/trade-license'
     },
     {
       id: 'building-permit',
       title: 'Building Permits',
       description: 'Apply for construction permits and approvals',
-      icon: '🏗️',
+      icon: <Building className="h-6 w-6" />,
+      path: '/services/building-permit'
     },
     {
       id: 'marriage-registration',
       title: 'Marriage Registration',
       description: 'Register marriages and get certificates',
-      icon: '💍',
+      icon: <Heart className="h-6 w-6" />,
+      path: '/services/marriage-registration'
     },
   ];
 
@@ -68,9 +75,11 @@ const Services = () => {
                     <CardDescription>{service.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button className="w-full bg-municipal-orange hover:bg-orange-600">
-                      Access Service
-                    </Button>
+                    <Link to={service.path}>
+                      <Button className="w-full bg-municipal-orange hover:bg-orange-600">
+                        Access Service
+                      </Button>
+                    </Link>
                   </CardContent>
                 </Card>
               ))}

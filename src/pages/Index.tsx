@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,23 +8,48 @@ import { MapPin, Search } from "lucide-react";
 import ComplaintCategories from "@/components/ComplaintCategories";
 
 const Index = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleGetLocation = () => {
     if (navigator.geolocation) {
+      setIsLoading(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          toast({
-            title: "Location detected",
-            description: `Lat: ${latitude}, Long: ${longitude}`,
-          });
+          
+          // Reverse geocoding using free Nominatim API
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`)
+            .then(response => response.json())
+            .then(data => {
+              const address = data.display_name;
+              const city = data.address.city || data.address.town || data.address.village || 'Unknown location';
+              const state = data.address.state || '';
+              
+              toast({
+                title: "Location detected",
+                description: `${city}, ${state}`,
+              });
+            })
+            .catch(error => {
+              console.error("Error fetching location details:", error);
+              toast({
+                title: "Location detected",
+                description: `Coordinates: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+              });
+            })
+            .finally(() => {
+              setIsLoading(false);
+            });
         },
         (error) => {
+          setIsLoading(false);
           toast({
             title: "Error getting location",
             description: error.message,
             variant: "destructive",
           });
-        }
+        },
+        { enableHighAccuracy: true }
       );
     } else {
       toast({
@@ -48,10 +74,11 @@ const Index = () => {
           </div>
           <Button 
             onClick={handleGetLocation}
+            disabled={isLoading}
             className="bg-municipal-orange hover:bg-orange-600 text-white flex items-center gap-2 py-6 px-6 rounded-full"
           >
             <MapPin className="h-5 w-5" />
-            Get My Location
+            {isLoading ? 'Detecting...' : 'Get My Location'}
           </Button>
         </div>
 
