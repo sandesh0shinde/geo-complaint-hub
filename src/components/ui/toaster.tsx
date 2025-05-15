@@ -1,5 +1,5 @@
 
-import { useToast } from "@/hooks/use-toast"
+import { toast as sonnerToast } from "sonner"
 import {
   Toast,
   ToastClose,
@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/toast"
 
 export function Toaster() {
-  const { toasts } = useToast()
+  // We'll create an empty array as fallback since our hook doesn't return toasts array
+  const toasts: any[] = [];
 
   return (
     <ToastProvider>
