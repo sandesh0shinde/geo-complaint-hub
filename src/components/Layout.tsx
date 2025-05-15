@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MapPin, ChevronDown } from 'lucide-react';
+import { MapPin, ChevronDown, Building, Home, Ticket, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 
@@ -65,11 +65,7 @@ const Layout = ({ children }: LayoutProps) => {
         <div className="container mx-auto py-4 px-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
-              <img 
-                src="/placeholder.svg" 
-                alt="MNC Logo" 
-                className="h-10 w-10 mr-3" 
-              />
+              <Building className="h-10 w-10 mr-3 text-white" />
               <div>
                 <h1 className="text-2xl font-bold text-municipal-text">MUNICIPAL CORPORATION</h1>
                 <p className="text-sm text-municipal-text">Government of Maharashtra</p>
@@ -77,40 +73,24 @@ const Layout = ({ children }: LayoutProps) => {
             </div>
 
             <div className="flex space-x-10">
-              <Link to="/" className="flex flex-col items-center">
-                <img 
-                  src="/placeholder.svg" 
-                  alt="Home" 
-                  className="h-6 w-6" 
-                />
+              <Link to="/" className="flex flex-col items-center text-white">
+                <Home className="h-6 w-6" />
                 <span className="text-sm">Home</span>
               </Link>
 
-              <Link to="/services" className="flex flex-col items-center">
-                <img 
-                  src="/placeholder.svg" 
-                  alt="Ticket" 
-                  className="h-6 w-6" 
-                />
+              <Link to="/services" className="flex flex-col items-center text-white">
+                <Ticket className="h-6 w-6" />
                 <span className="text-sm">Ticket</span>
               </Link>
 
               {isLoggedIn ? (
-                <Link to="/profile" className="flex flex-col items-center">
-                  <img 
-                    src="/placeholder.svg" 
-                    alt="Profile" 
-                    className="h-6 w-6" 
-                  />
+                <Link to="/profile" className="flex flex-col items-center text-white">
+                  <User className="h-6 w-6" />
                   <span className="text-sm">Profile</span>
                 </Link>
               ) : (
-                <Link to="/login" className="flex flex-col items-center">
-                  <img 
-                    src="/placeholder.svg" 
-                    alt="User" 
-                    className="h-6 w-6" 
-                  />
+                <Link to="/login" className="flex flex-col items-center text-white">
+                  <User className="h-6 w-6" />
                   <span className="text-sm">Sign Up</span>
                 </Link>
               )}
