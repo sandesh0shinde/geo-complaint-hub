@@ -187,10 +187,28 @@ const Profile = () => {
                     </Tabs>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-                      <Button variant="outline" className="border-gray-300 hover:bg-gray-50">
+                      <Button 
+                        variant="outline" 
+                        className="border-gray-300 hover:bg-gray-50"
+                        onClick={() => {
+                          toast({
+                            title: "Department Settings",
+                            description: "Department settings page is under development",
+                          });
+                        }}
+                      >
                         Department Settings
                       </Button>
-                      <Button variant="outline" className="border-gray-300 hover:bg-gray-50">
+                      <Button 
+                        variant="outline" 
+                        className="border-gray-300 hover:bg-gray-50"
+                        onClick={() => {
+                          toast({
+                            title: "System Configuration",
+                            description: "System configuration page is under development",
+                          });
+                        }}
+                      >
                         System Configuration
                       </Button>
                     </div>

@@ -100,74 +100,76 @@ const Layout = ({ children }: LayoutProps) => {
       </header>
 
       {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200">
+      <nav className="bg-white border-b border-gray-200 w-full">
         <div className="container mx-auto">
-          <div className="flex justify-center">
-            <Link to="/about" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 text-center">
-              About MNC
-            </Link>
-            
-            <div 
-              className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 cursor-pointer relative group text-center"
-              onMouseEnter={() => setZonalOfficesOpen(true)}
-              onMouseLeave={() => setZonalOfficesOpen(false)}
-            >
-              <div className="flex items-center justify-center">
-                Zonal offices
-                <ChevronDown className="ml-1 h-4 w-4" />
+          <div className="flex justify-center w-full">
+            <div className="flex w-full justify-center">
+              <Link to="/about" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 text-center flex-1">
+                About MNC
+              </Link>
+              
+              <div 
+                className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 cursor-pointer relative group text-center flex-1"
+                onMouseEnter={() => setZonalOfficesOpen(true)}
+                onMouseLeave={() => setZonalOfficesOpen(false)}
+              >
+                <div className="flex items-center justify-center">
+                  Zonal offices
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                </div>
+                
+                {zonalOfficesOpen && (
+                  <div className="absolute left-0 mt-4 w-48 bg-white shadow-lg z-10 border border-gray-200">
+                    {zonalOffices.map((office) => (
+                      <Link 
+                        key={office.id}
+                        to={`/zonal-office/${office.id}`}
+                        className="block px-4 py-2 hover:bg-gray-100"
+                      >
+                        {office.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
               
-              {zonalOfficesOpen && (
-                <div className="absolute left-0 mt-4 w-48 bg-white shadow-lg z-10 border border-gray-200">
-                  {zonalOffices.map((office) => (
-                    <Link 
-                      key={office.id}
-                      to={`/zonal-office/${office.id}`}
-                      className="block px-4 py-2 hover:bg-gray-100"
-                    >
-                      {office.name}
-                    </Link>
-                  ))}
+              <div 
+                className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 cursor-pointer relative text-center flex-1"
+                onMouseEnter={() => setDepartmentsOpen(true)}
+                onMouseLeave={() => setDepartmentsOpen(false)}
+              >
+                <div className="flex items-center justify-center">
+                  Departments
+                  <ChevronDown className="ml-1 h-4 w-4" />
                 </div>
-              )}
-            </div>
-            
-            <div 
-              className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 cursor-pointer relative text-center"
-              onMouseEnter={() => setDepartmentsOpen(true)}
-              onMouseLeave={() => setDepartmentsOpen(false)}
-            >
-              <div className="flex items-center justify-center">
-                Departments
-                <ChevronDown className="ml-1 h-4 w-4" />
+                
+                {departmentsOpen && (
+                  <div className="absolute left-0 mt-4 w-48 bg-white shadow-lg z-10 border border-gray-200">
+                    {departments.map((dept) => (
+                      <Link 
+                        key={dept.id}
+                        to={`/department/${dept.id}`}
+                        className="block px-4 py-2 hover:bg-gray-100"
+                      >
+                        {dept.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
               
-              {departmentsOpen && (
-                <div className="absolute left-0 mt-4 w-48 bg-white shadow-lg z-10 border border-gray-200">
-                  {departments.map((dept) => (
-                    <Link 
-                      key={dept.id}
-                      to={`/department/${dept.id}`}
-                      className="block px-4 py-2 hover:bg-gray-100"
-                    >
-                      {dept.name}
-                    </Link>
-                  ))}
-                </div>
-              )}
+              <Link to="/services" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 text-center flex-1">
+                Services
+              </Link>
+              
+              <Link to="/grievances" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 text-center flex-1">
+                Grievances
+              </Link>
+              
+              <Link to="/contact" className="px-6 py-4 border-gray-200 hover:bg-gray-100 text-center flex-1">
+                Contact us
+              </Link>
             </div>
-            
-            <Link to="/services" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 text-center">
-              Services
-            </Link>
-            
-            <Link to="/grievances" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 text-center">
-              Grievances
-            </Link>
-            
-            <Link to="/contact" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 text-center">
-              Contact us
-            </Link>
           </div>
         </div>
       </nav>

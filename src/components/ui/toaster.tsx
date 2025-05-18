@@ -8,14 +8,15 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast"
+import { useToast } from "@/components/ui/use-toast"
 
 export function Toaster() {
-  // We'll create an empty array as fallback since our hook doesn't return toasts array
-  const toasts: any[] = [];
+  // Use a default empty array for toasts to prevent "map of undefined" error
+  const { toasts = [] } = useToast();
 
   return (
     <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
+      {Array.isArray(toasts) && toasts.map(function ({ id, title, description, action, ...props }) {
         return (
           <Toast key={id} {...props}>
             <div className="grid gap-1">

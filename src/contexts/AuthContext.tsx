@@ -11,7 +11,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string, isAdmin?: boolean) => Promise<boolean>;
   logout: () => void;
   isAdmin: boolean;
 }
@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, isAdmin?: boolean) => {
     // Check for admin credentials
     if (email === "admin@municipal.gov" && password === "admin123") {
       const adminUser = {
@@ -54,16 +54,21 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     
     // Regular user login (mock)
     else if (email && password) {
+      // If isAdmin flag is provided during signup, use it
+      const isAdminUser = isAdmin === true || 
+                         email.endsWith("@municipal.gov") || 
+                         email.endsWith("@gov.in");
+      
       const mockUser = {
         id: '1',
         name: email.split('@')[0],
         email: email,
-        isAdmin: false
+        isAdmin: isAdminUser
       };
       
       setUser(mockUser);
       setIsLoggedIn(true);
-      setIsAdmin(false);
+      setIsAdmin(isAdminUser);
       localStorage.setItem('user', JSON.stringify(mockUser));
       return true;
     }
