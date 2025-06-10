@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { User, Settings, FileText, Shield, Users, Cog } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-// Define complaint type
 interface Complaint {
   id: string;
   date: string;
@@ -20,337 +22,300 @@ interface Complaint {
 }
 
 const Profile = () => {
-  const { user, isLoggedIn, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const [complaints, setComplaints] = useState<Complaint[]>([]);
-  const [activeTab, setActiveTab] = useState("all");
+  const [userComplaints, setUserComplaints] = useState<Complaint[]>([]);
+  const [userInfo, setUserInfo] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: "",
+    address: "",
+  });
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      toast({
-        title: "Access Denied",
-        description: "Please login to view your profile",
-        variant: "destructive",
-      });
-      navigate("/login");
+    if (!user) {
+      navigate('/login');
+      return;
     }
-  }, [isLoggedIn, navigate]);
 
-  useEffect(() => {
-    // Load complaints from localStorage
-    if (isLoggedIn) {
-      const savedComplaints = localStorage.getItem("userComplaints");
-      if (savedComplaints) {
-        setComplaints(JSON.parse(savedComplaints));
-      }
+    // Load user complaints from localStorage
+    const savedComplaints = localStorage.getItem("userComplaints");
+    if (savedComplaints) {
+      setUserComplaints(JSON.parse(savedComplaints));
     }
-  }, [isLoggedIn]);
+  }, [user, navigate]);
 
   const handleLogout = () => {
     logout();
     toast({
-      title: "Logged Out",
-      description: "You have been logged out successfully",
+      title: "Logged out",
+      description: "You have been successfully logged out.",
     });
-    navigate("/");
+    navigate('/');
   };
 
-  const getFilteredComplaints = () => {
-    if (activeTab === "all") return complaints;
-    return complaints.filter(complaint => complaint.status.toLowerCase() === activeTab);
-  };
-
-  const updateComplaintStatus = (complaintId: string, newStatus: string) => {
-    const updatedComplaints = complaints.map(complaint => {
-      if (complaint.id === complaintId) {
-        return { ...complaint, status: newStatus };
-      }
-      return complaint;
-    });
-    
-    setComplaints(updatedComplaints);
-    localStorage.setItem("userComplaints", JSON.stringify(updatedComplaints));
-    
+  const handleUpdateProfile = () => {
+    // Update user info logic would go here
     toast({
-      title: "Status Updated",
-      description: `Complaint ${complaintId} status changed to ${newStatus}`,
+      title: "Profile updated",
+      description: "Your profile has been updated successfully.",
     });
   };
 
-  if (!isLoggedIn || !user) {
+  const handleDepartmentSettings = () => {
+    navigate('/admin/departments');
+  };
+
+  const handleSystemConfiguration = () => {
+    navigate('/admin/system-config');
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Submitted":
+        return "bg-yellow-100 text-yellow-800";
+      case "In Progress":
+        return "bg-blue-100 text-blue-800";
+      case "Resolved":
+        return "bg-green-100 text-green-800";
+      case "Closed":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  if (!user) {
     return null;
   }
 
   return (
     <Layout>
-      <div className="container mx-auto py-12 px-4">
-        <div className="max-w-3xl mx-auto">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl">Your Profile</CardTitle>
-                  <CardDescription>Manage your account and view your complaints</CardDescription>
-                </div>
-                {isAdmin && (
-                  <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
-                    Administrator
-                  </Badge>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-8">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <div className={`${isAdmin ? "bg-blue-600" : "bg-municipal-orange"} text-white h-20 w-20 rounded-full flex items-center justify-center text-2xl font-bold`}>
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">{user.name}</h3>
-                    <p className="text-muted-foreground">{user.email}</p>
-                    {isAdmin && (
-                      <p className="text-sm text-blue-600 mt-1">Municipal Administrator</p>
-                    )}
-                  </div>
-                </div>
-
-                {isAdmin ? (
-                  <div>
-                    <h4 className="text-lg font-semibold mb-4">Administration Panel</h4>
-                    
-                    <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-                      <div className="mb-4">
-                        <h5 className="text-md font-semibold mb-2">Manage Grievances</h5>
-                        <TabsList className="w-full grid grid-cols-4">
-                          <TabsTrigger value="all">All Complaints</TabsTrigger>
-                          <TabsTrigger value="submitted">New</TabsTrigger>
-                          <TabsTrigger value="in progress">In Progress</TabsTrigger>
-                          <TabsTrigger value="resolved">Resolved</TabsTrigger>
-                        </TabsList>
-                      </div>
-                      
-                      <TabsContent value="all" className="border rounded-md p-4">
-                        {complaints.length > 0 ? (
-                          <ComplaintTable 
-                            complaints={getFilteredComplaints()} 
-                            isAdmin={true} 
-                            onUpdateStatus={updateComplaintStatus} 
-                          />
-                        ) : (
-                          <div className="text-center py-6 text-muted-foreground">
-                            No complaints registered in the system yet.
-                          </div>
-                        )}
-                      </TabsContent>
-                      
-                      <TabsContent value="submitted" className="border rounded-md p-4">
-                        {getFilteredComplaints().length > 0 ? (
-                          <ComplaintTable 
-                            complaints={getFilteredComplaints()} 
-                            isAdmin={true} 
-                            onUpdateStatus={updateComplaintStatus} 
-                          />
-                        ) : (
-                          <div className="text-center py-6 text-muted-foreground">
-                            No new complaints.
-                          </div>
-                        )}
-                      </TabsContent>
-                      
-                      <TabsContent value="in progress" className="border rounded-md p-4">
-                        {getFilteredComplaints().length > 0 ? (
-                          <ComplaintTable 
-                            complaints={getFilteredComplaints()} 
-                            isAdmin={true} 
-                            onUpdateStatus={updateComplaintStatus} 
-                          />
-                        ) : (
-                          <div className="text-center py-6 text-muted-foreground">
-                            No complaints in progress.
-                          </div>
-                        )}
-                      </TabsContent>
-                      
-                      <TabsContent value="resolved" className="border rounded-md p-4">
-                        {getFilteredComplaints().length > 0 ? (
-                          <ComplaintTable 
-                            complaints={getFilteredComplaints()} 
-                            isAdmin={true} 
-                            onUpdateStatus={updateComplaintStatus} 
-                          />
-                        ) : (
-                          <div className="text-center py-6 text-muted-foreground">
-                            No resolved complaints.
-                          </div>
-                        )}
-                      </TabsContent>
-                    </Tabs>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-                      <Button 
-                        variant="outline" 
-                        className="border-gray-300 hover:bg-gray-50"
-                        onClick={() => {
-                          toast({
-                            title: "Department Settings",
-                            description: "Department settings page is under development",
-                          });
-                        }}
-                      >
-                        Department Settings
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="border-gray-300 hover:bg-gray-50"
-                        onClick={() => {
-                          toast({
-                            title: "System Configuration",
-                            description: "System configuration page is under development",
-                          });
-                        }}
-                      >
-                        System Configuration
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <h4 className="text-lg font-semibold mb-2">Your Recent Complaints</h4>
-                    {complaints.length > 0 ? (
-                      <ComplaintTable 
-                        complaints={complaints} 
-                        isAdmin={false} 
-                      />
-                    ) : (
-                      <div className="bg-gray-100 p-6 rounded-md text-center">
-                        <p className="text-muted-foreground">You haven't filed any complaints yet.</p>
-                        <Button 
-                          variant="link" 
-                          onClick={() => navigate("/grievances")}
-                          className="text-municipal-orange"
-                        >
-                          File a new complaint
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between flex-col sm:flex-row gap-4">
-              <Button variant="outline" onClick={() => navigate("/")}>
-                Back to Home
-              </Button>
-              <Button 
-                variant="destructive" 
-                onClick={handleLogout}
-              >
-                Logout
-              </Button>
-            </CardFooter>
-          </Card>
+      <div className="container mx-auto py-8 px-4">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">My Profile</h1>
+          <Button onClick={handleLogout} variant="outline">
+            Logout
+          </Button>
         </div>
+
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="complaints" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              My Complaints
+            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="admin" className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Admin Panel
+              </TabsTrigger>
+            )}
+          </TabsList>
+
+          <TabsContent value="profile">
+            <Card>
+              <CardHeader>
+                <CardTitle>Personal Information</CardTitle>
+                <CardDescription>
+                  Update your personal details and contact information
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      value={userInfo.name}
+                      onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={userInfo.email}
+                      onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      value={userInfo.phone}
+                      onChange={(e) => setUserInfo({ ...userInfo, phone: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Input
+                      id="address"
+                      value={userInfo.address}
+                      onChange={(e) => setUserInfo({ ...userInfo, address: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <Button onClick={handleUpdateProfile} className="bg-municipal-orange hover:bg-orange-600">
+                  Update Profile
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="complaints">
+            <Card>
+              <CardHeader>
+                <CardTitle>My Complaints</CardTitle>
+                <CardDescription>
+                  Track the status of your submitted complaints
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {userComplaints.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">
+                    No complaints submitted yet.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {userComplaints.map((complaint) => (
+                      <div key={complaint.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h3 className="font-semibold">{complaint.subject}</h3>
+                            <p className="text-sm text-gray-600">ID: {complaint.id}</p>
+                          </div>
+                          <Badge className={getStatusColor(complaint.status)}>
+                            {complaint.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-700 mb-2">{complaint.description}</p>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>Category: {complaint.category}</span>
+                          <span>Date: {complaint.date}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {isAdmin && (
+            <TabsContent value="admin">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Department Management
+                    </CardTitle>
+                    <CardDescription>
+                      Manage department settings and configurations
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button 
+                      onClick={handleDepartmentSettings}
+                      className="w-full bg-municipal-orange hover:bg-orange-600"
+                    >
+                      Department Settings
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Cog className="h-5 w-5" />
+                      System Configuration
+                    </CardTitle>
+                    <CardDescription>
+                      Configure system-wide settings and parameters
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button 
+                      onClick={handleSystemConfiguration}
+                      className="w-full bg-municipal-orange hover:bg-orange-600"
+                    >
+                      System Configuration
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Complaint Overview
+                    </CardTitle>
+                    <CardDescription>
+                      View and manage all user complaints
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Total Complaints:</span>
+                        <span className="font-semibold">{userComplaints.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Pending:</span>
+                        <span className="font-semibold">
+                          {userComplaints.filter(c => c.status === "Submitted").length}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>In Progress:</span>
+                        <span className="font-semibold">
+                          {userComplaints.filter(c => c.status === "In Progress").length}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Resolved:</span>
+                        <span className="font-semibold">
+                          {userComplaints.filter(c => c.status === "Resolved").length}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Quick Actions
+                    </CardTitle>
+                    <CardDescription>
+                      Common administrative tasks
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Button variant="outline" className="w-full">
+                      View All Users
+                    </Button>
+                    <Button variant="outline" className="w-full">
+                      Generate Reports
+                    </Button>
+                    <Button variant="outline" className="w-full">
+                      System Logs
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          )}
+        </Tabs>
       </div>
     </Layout>
-  );
-};
-
-// Complaint Table component
-interface ComplaintTableProps {
-  complaints: Complaint[];
-  isAdmin: boolean;
-  onUpdateStatus?: (complaintId: string, status: string) => void;
-}
-
-const ComplaintTable = ({ complaints, isAdmin, onUpdateStatus }: ComplaintTableProps) => {
-  return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Subject</TableHead>
-            <TableHead>Status</TableHead>
-            {isAdmin && <TableHead>Actions</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {complaints.map(complaint => (
-            <TableRow key={complaint.id}>
-              <TableCell className="font-medium">{complaint.id}</TableCell>
-              <TableCell>{complaint.date}</TableCell>
-              <TableCell className="capitalize">{complaint.category}</TableCell>
-              <TableCell>{complaint.subject}</TableCell>
-              <TableCell>
-                <StatusBadge status={complaint.status} />
-              </TableCell>
-              {isAdmin && onUpdateStatus && (
-                <TableCell>
-                  <div className="flex gap-2">
-                    {complaint.status === "Submitted" && (
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => onUpdateStatus(complaint.id, "In Progress")}
-                      >
-                        Start Progress
-                      </Button>
-                    )}
-                    {complaint.status === "In Progress" && (
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => onUpdateStatus(complaint.id, "Resolved")}
-                      >
-                        Mark Resolved
-                      </Button>
-                    )}
-                    {complaint.status === "Resolved" && (
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => onUpdateStatus(complaint.id, "Closed")}
-                        disabled={complaint.status === "Closed"}
-                      >
-                        Close Case
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
-              )}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-};
-
-// Status badge component
-const StatusBadge = ({ status }: { status: string }) => {
-  let className = "bg-gray-100 text-gray-800";
-  
-  switch (status) {
-    case "Submitted":
-      className = "bg-amber-100 text-amber-800";
-      break;
-    case "In Progress":
-      className = "bg-blue-100 text-blue-800";
-      break;
-    case "Resolved":
-      className = "bg-green-100 text-green-800";
-      break;
-    case "Closed":
-      className = "bg-gray-100 text-gray-800";
-      break;
-  }
-  
-  return (
-    <Badge variant="outline" className={className}>
-      {status}
-    </Badge>
   );
 };
 
