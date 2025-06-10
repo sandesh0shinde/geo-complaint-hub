@@ -1,89 +1,161 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { User, Session } from "@supabase/supabase-js";
 
-interface User {
+interface UserProfile {
   id: string;
-  name: string;
-  email: string;
-  isAdmin: boolean;
+  full_name: string;
+  phone_number?: string;
+  address?: string;
+  is_admin: boolean;
+  email_verified: boolean;
+  phone_verified: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
+  userProfile: UserProfile | null;
+  session: Session | null;
   isLoggedIn: boolean;
-  login: (email: string, password: string, isAdmin?: boolean) => Promise<boolean>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{ error?: string }>;
+  signup: (email: string, password: string, fullName: string, isAdmin?: boolean) => Promise<{ error?: string }>;
+  logout: () => Promise<void>;
   isAdmin: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Convert the AuthProvider to a proper functional component
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const isAdmin = userProfile?.is_admin || false;
 
   useEffect(() => {
-    // Check local storage for saved user data
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      const parsedUser = JSON.parse(savedUser);
-      setUser(parsedUser);
-      setIsLoggedIn(true);
-      setIsAdmin(parsedUser.isAdmin || false);
-    }
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoggedIn(!!session?.user);
+        
+        if (session?.user) {
+          // Fetch user profile when user is authenticated
+          setTimeout(async () => {
+            await fetchUserProfile(session.user.id);
+          }, 0);
+        } else {
+          setUserProfile(null);
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoggedIn(!!session?.user);
+      
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string, isAdmin?: boolean) => {
-    // Check for admin credentials
-    if (email === "admin@municipal.gov" && password === "admin123") {
-      const adminUser = {
-        id: 'admin1',
-        name: 'Administrator',
-        email: email,
-        isAdmin: true
-      };
-      
-      setUser(adminUser);
-      setIsLoggedIn(true);
-      setIsAdmin(true);
-      localStorage.setItem('user', JSON.stringify(adminUser));
-      return true;
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return;
+      }
+
+      setUserProfile(data);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
     }
-    
-    // Regular user login (mock)
-    else if (email && password) {
-      // If isAdmin flag is provided during signup, use it
-      const isAdminUser = isAdmin === true || 
-                         email.endsWith("@municipal.gov") || 
-                         email.endsWith("@gov.in");
-      
-      const mockUser = {
-        id: '1',
-        name: email.split('@')[0],
-        email: email,
-        isAdmin: isAdminUser
-      };
-      
-      setUser(mockUser);
-      setIsLoggedIn(true);
-      setIsAdmin(isAdminUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      return true;
-    }
-    return false;
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsLoggedIn(false);
-    setIsAdmin(false);
-    localStorage.removeItem('user');
+  const login = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
+  const signup = async (email: string, password: string, fullName: string, isAdmin = false) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            is_admin: isAdmin
+          },
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setUserProfile(null);
+      setSession(null);
+      setIsLoggedIn(false);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, login, logout, isAdmin }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      userProfile,
+      session,
+      isLoggedIn, 
+      login, 
+      signup,
+      logout, 
+      isAdmin,
+      loading
+    }}>
       {children}
     </AuthContext.Provider>
   );

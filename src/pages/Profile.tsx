@@ -11,42 +11,95 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
 import { User, Settings, FileText, Shield, Users, Cog } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Complaint {
   id: string;
-  date: string;
+  created_at: string;
   status: string;
   category: string;
   subject: string;
   description: string;
+  location?: string;
 }
 
 const Profile = () => {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, userProfile, logout, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const [userComplaints, setUserComplaints] = useState<Complaint[]>([]);
+  const [allComplaints, setAllComplaints] = useState<Complaint[]>([]);
   const [userInfo, setUserInfo] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: "",
-    address: "",
+    full_name: userProfile?.full_name || "",
+    phone_number: userProfile?.phone_number || "",
+    address: userProfile?.address || "",
   });
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       navigate('/login');
       return;
     }
 
-    // Load user complaints from localStorage
-    const savedComplaints = localStorage.getItem("userComplaints");
-    if (savedComplaints) {
-      setUserComplaints(JSON.parse(savedComplaints));
+    if (userProfile) {
+      setUserInfo({
+        full_name: userProfile.full_name || "",
+        phone_number: userProfile.phone_number || "",
+        address: userProfile.address || "",
+      });
     }
-  }, [user, navigate]);
+  }, [user, userProfile, navigate, loading]);
 
-  const handleLogout = () => {
-    logout();
+  useEffect(() => {
+    if (user) {
+      fetchUserComplaints();
+      if (isAdmin) {
+        fetchAllComplaints();
+      }
+    }
+  }, [user, isAdmin]);
+
+  const fetchUserComplaints = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('complaints')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching complaints:', error);
+        return;
+      }
+
+      setUserComplaints(data || []);
+    } catch (error) {
+      console.error('Error fetching complaints:', error);
+    }
+  };
+
+  const fetchAllComplaints = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('complaints')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching all complaints:', error);
+        return;
+      }
+
+      setAllComplaints(data || []);
+    } catch (error) {
+      console.error('Error fetching all complaints:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
     toast({
       title: "Logged out",
       description: "You have been successfully logged out.",
@@ -54,20 +107,38 @@ const Profile = () => {
     navigate('/');
   };
 
-  const handleUpdateProfile = () => {
-    // Update user info logic would go here
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been updated successfully.",
-    });
-  };
+  const handleUpdateProfile = async () => {
+    if (!user) return;
 
-  const handleDepartmentSettings = () => {
-    navigate('/admin/departments');
-  };
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          full_name: userInfo.full_name,
+          phone_number: userInfo.phone_number || null,
+          address: userInfo.address || null,
+        })
+        .eq('id', user.id);
 
-  const handleSystemConfiguration = () => {
-    navigate('/admin/system-config');
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -85,9 +156,21 @@ const Profile = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto py-8 px-4 flex justify-center">
+          <div>Loading...</div>
+        </div>
+      </Layout>
+    );
+  }
+
   if (!user) {
     return null;
   }
+
+  const complaintsToShow = isAdmin ? allComplaints : userComplaints;
 
   return (
     <Layout>
@@ -107,7 +190,7 @@ const Profile = () => {
             </TabsTrigger>
             <TabsTrigger value="complaints" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              My Complaints
+              {isAdmin ? "All Complaints" : "My Complaints"}
             </TabsTrigger>
             {isAdmin && (
               <TabsTrigger value="admin" className="flex items-center gap-2">
@@ -131,8 +214,8 @@ const Profile = () => {
                     <Label htmlFor="name">Full Name</Label>
                     <Input
                       id="name"
-                      value={userInfo.name}
-                      onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
+                      value={userInfo.full_name}
+                      onChange={(e) => setUserInfo({ ...userInfo, full_name: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -140,16 +223,17 @@ const Profile = () => {
                     <Input
                       id="email"
                       type="email"
-                      value={userInfo.email}
-                      onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
+                      value={user.email || ""}
+                      disabled
+                      className="bg-gray-100"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
                     <Input
                       id="phone"
-                      value={userInfo.phone}
-                      onChange={(e) => setUserInfo({ ...userInfo, phone: e.target.value })}
+                      value={userInfo.phone_number}
+                      onChange={(e) => setUserInfo({ ...userInfo, phone_number: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -161,8 +245,12 @@ const Profile = () => {
                     />
                   </div>
                 </div>
-                <Button onClick={handleUpdateProfile} className="bg-municipal-orange hover:bg-orange-600">
-                  Update Profile
+                <Button 
+                  onClick={handleUpdateProfile} 
+                  className="bg-municipal-orange hover:bg-orange-600"
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? "Updating..." : "Update Profile"}
                 </Button>
               </CardContent>
             </Card>
@@ -171,33 +259,36 @@ const Profile = () => {
           <TabsContent value="complaints">
             <Card>
               <CardHeader>
-                <CardTitle>My Complaints</CardTitle>
+                <CardTitle>{isAdmin ? "All Complaints" : "My Complaints"}</CardTitle>
                 <CardDescription>
-                  Track the status of your submitted complaints
+                  {isAdmin ? "View and manage all user complaints" : "Track the status of your submitted complaints"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {userComplaints.length === 0 ? (
+                {complaintsToShow.length === 0 ? (
                   <p className="text-center text-gray-500 py-8">
-                    No complaints submitted yet.
+                    No complaints {isAdmin ? "in the system" : "submitted"} yet.
                   </p>
                 ) : (
                   <div className="space-y-4">
-                    {userComplaints.map((complaint) => (
+                    {complaintsToShow.map((complaint) => (
                       <div key={complaint.id} className="border rounded-lg p-4">
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <h3 className="font-semibold">{complaint.subject}</h3>
-                            <p className="text-sm text-gray-600">ID: {complaint.id}</p>
+                            <p className="text-sm text-gray-600">ID: {complaint.id.slice(0, 8)}</p>
                           </div>
                           <Badge className={getStatusColor(complaint.status)}>
                             {complaint.status}
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-700 mb-2">{complaint.description}</p>
+                        {complaint.location && (
+                          <p className="text-sm text-gray-600 mb-2">Location: {complaint.location}</p>
+                        )}
                         <div className="flex justify-between text-xs text-gray-500">
                           <span>Category: {complaint.category}</span>
-                          <span>Date: {complaint.date}</span>
+                          <span>Date: {new Date(complaint.created_at).toLocaleDateString()}</span>
                         </div>
                       </div>
                     ))}
@@ -213,46 +304,6 @@ const Profile = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" />
-                      Department Management
-                    </CardTitle>
-                    <CardDescription>
-                      Manage department settings and configurations
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button 
-                      onClick={handleDepartmentSettings}
-                      className="w-full bg-municipal-orange hover:bg-orange-600"
-                    >
-                      Department Settings
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Cog className="h-5 w-5" />
-                      System Configuration
-                    </CardTitle>
-                    <CardDescription>
-                      Configure system-wide settings and parameters
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button 
-                      onClick={handleSystemConfiguration}
-                      className="w-full bg-municipal-orange hover:bg-orange-600"
-                    >
-                      System Configuration
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
                       <FileText className="h-5 w-5" />
                       Complaint Overview
                     </CardTitle>
@@ -264,24 +315,24 @@ const Profile = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span>Total Complaints:</span>
-                        <span className="font-semibold">{userComplaints.length}</span>
+                        <span className="font-semibold">{allComplaints.length}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Pending:</span>
                         <span className="font-semibold">
-                          {userComplaints.filter(c => c.status === "Submitted").length}
+                          {allComplaints.filter(c => c.status === "Submitted").length}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span>In Progress:</span>
                         <span className="font-semibold">
-                          {userComplaints.filter(c => c.status === "In Progress").length}
+                          {allComplaints.filter(c => c.status === "In Progress").length}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Resolved:</span>
                         <span className="font-semibold">
-                          {userComplaints.filter(c => c.status === "Resolved").length}
+                          {allComplaints.filter(c => c.status === "Resolved").length}
                         </span>
                       </div>
                     </div>
@@ -300,13 +351,13 @@ const Profile = () => {
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <Button variant="outline" className="w-full">
-                      View All Users
-                    </Button>
-                    <Button variant="outline" className="w-full">
                       Generate Reports
                     </Button>
                     <Button variant="outline" className="w-full">
-                      System Logs
+                      Export Data
+                    </Button>
+                    <Button variant="outline" className="w-full">
+                      System Settings
                     </Button>
                   </CardContent>
                 </Card>

@@ -1,175 +1,240 @@
 
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Ticket } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Search, FileText, AlertCircle } from "lucide-react";
 
-interface ComplaintTicket {
+interface Complaint {
   id: string;
-  date: string;
+  created_at: string;
   status: string;
   category: string;
   subject: string;
   description: string;
+  location?: string;
 }
 
 const TrackComplaints = () => {
-  const [ticketId, setTicketId] = useState("");
-  const [searchedTicket, setSearchedTicket] = useState<ComplaintTicket | null>(null);
-  const [complaints, setComplaints] = useState<ComplaintTicket[]>(() => {
-    // Try to load complaints from localStorage
-    const savedComplaints = localStorage.getItem("userComplaints");
-    return savedComplaints ? JSON.parse(savedComplaints) : [];
-  });
+  const { user, isLoggedIn, loading } = useAuth();
+  const navigate = useNavigate();
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!ticketId.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid ticket ID",
-        variant: "destructive",
-      });
+  useEffect(() => {
+    if (!loading && !isLoggedIn) {
+      navigate('/login');
       return;
     }
 
-    const foundTicket = complaints.find(complaint => complaint.id === ticketId);
-    
-    if (foundTicket) {
-      setSearchedTicket(foundTicket);
-    } else {
-      toast({
-        title: "Ticket Not Found",
-        description: "No complaint found with the provided ticket ID.",
-        variant: "destructive",
-      });
-      setSearchedTicket(null);
+    if (user) {
+      fetchComplaints();
+    }
+  }, [user, isLoggedIn, loading, navigate]);
+
+  const fetchComplaints = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('complaints')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching complaints:', error);
+        return;
+      }
+
+      setComplaints(data || []);
+    } catch (error) {
+      console.error('Error fetching complaints:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const filteredComplaints = complaints.filter(complaint =>
+    complaint.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    complaint.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    complaint.id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Submitted":
+        return "bg-yellow-100 text-yellow-800";
+      case "In Progress":
+        return "bg-blue-100 text-blue-800";
+      case "Resolved":
+        return "bg-green-100 text-green-800";
+      case "Closed":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "Submitted":
+        return <FileText className="h-4 w-4" />;
+      case "In Progress":
+        return <AlertCircle className="h-4 w-4" />;
+      case "Resolved":
+        return <FileText className="h-4 w-4" />;
+      default:
+        return <FileText className="h-4 w-4" />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto py-8 px-4 flex justify-center">
+          <div>Loading...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return null;
+  }
 
   return (
     <Layout>
       <div className="container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-8 text-center">Track Your Complaints</h1>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-4">Track Your Complaints</h1>
+          <p className="text-gray-600">Monitor the status and progress of your submitted complaints</p>
+        </div>
 
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Ticket className="h-6 w-6" />
-              Search Complaint Status
-            </CardTitle>
-            <CardDescription>
-              Enter your complaint ticket ID to check its status
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSearch} className="flex gap-4">
-              <Input
-                placeholder="Enter Ticket ID (e.g., MNC123456)"
-                value={ticketId}
-                onChange={(e) => setTicketId(e.target.value)}
-                className="flex-1"
-              />
-              <Button type="submit" className="bg-municipal-orange hover:bg-orange-600">
-                Track Complaint
-              </Button>
-            </form>
-            
-            {searchedTicket && (
-              <div className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Complaint Details</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <p className="text-gray-500 text-sm">Ticket ID</p>
-                        <p className="font-medium">{searchedTicket.id}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-sm">Date Filed</p>
-                        <p className="font-medium">{searchedTicket.date}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-sm">Status</p>
-                        <p className={`inline-block px-2 py-1 rounded text-xs font-semibold
-                          ${searchedTicket.status === "Submitted" ? "bg-amber-100 text-amber-800" : 
-                          searchedTicket.status === "In Progress" ? "bg-blue-100 text-blue-800" : 
-                          searchedTicket.status === "Resolved" ? "bg-green-100 text-green-800" : 
-                          "bg-gray-100 text-gray-800"}`}>
-                          {searchedTicket.status}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-sm">Category</p>
-                        <p className="font-medium capitalize">{searchedTicket.category}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-sm">Subject</p>
-                      <p className="font-medium">{searchedTicket.subject}</p>
-                    </div>
-                    <div className="mt-2">
-                      <p className="text-gray-500 text-sm">Description</p>
-                      <p className="font-medium">{searchedTicket.description}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by complaint ID, subject, or category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
 
-        {complaints.length > 0 && (
+        {/* Complaints List */}
+        {isLoading ? (
+          <div className="text-center py-8">Loading complaints...</div>
+        ) : filteredComplaints.length === 0 ? (
           <Card>
+            <CardContent className="text-center py-12">
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {searchQuery ? "No matching complaints found" : "No complaints submitted yet"}
+              </h3>
+              <p className="text-gray-500 mb-4">
+                {searchQuery 
+                  ? "Try adjusting your search terms" 
+                  : "Submit your first complaint to get started"
+                }
+              </p>
+              {!searchQuery && (
+                <Button 
+                  onClick={() => navigate('/grievances')}
+                  className="bg-municipal-orange hover:bg-orange-600"
+                >
+                  Submit a Complaint
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {filteredComplaints.map((complaint) => (
+              <Card key={complaint.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <CardTitle className="text-lg">{complaint.subject}</CardTitle>
+                      <CardDescription>
+                        Complaint ID: {complaint.id.slice(0, 8)} • 
+                        Category: {complaint.category} • 
+                        Submitted: {new Date(complaint.created_at).toLocaleDateString()}
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(complaint.status)}
+                      <Badge className={getStatusColor(complaint.status)}>
+                        {complaint.status}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Description:</h4>
+                      <p className="text-sm text-gray-600">{complaint.description}</p>
+                    </div>
+                    
+                    {complaint.location && (
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-700 mb-1">Location:</h4>
+                        <p className="text-sm text-gray-600">{complaint.location}</p>
+                      </div>
+                    )}
+
+                    <div className="pt-2 border-t border-gray-100">
+                      <div className="flex justify-between items-center text-xs text-gray-500">
+                        <span>Last updated: {new Date(complaint.created_at).toLocaleDateString()}</span>
+                        <span>Status: {complaint.status}</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Summary Stats */}
+        {complaints.length > 0 && (
+          <Card className="mt-8">
             <CardHeader>
-              <CardTitle>Your Recent Complaints</CardTitle>
-              <CardDescription>
-                A list of all the complaints you've filed recently
-              </CardDescription>
+              <CardTitle className="text-lg">Complaint Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Ticket ID</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {complaints.map((complaint) => (
-                      <TableRow key={complaint.id} className="cursor-pointer hover:bg-slate-50" 
-                        onClick={() => {
-                          setTicketId(complaint.id);
-                          setSearchedTicket(complaint);
-                        }}>
-                        <TableCell className="font-medium">{complaint.id}</TableCell>
-                        <TableCell>{complaint.date}</TableCell>
-                        <TableCell className="capitalize">{complaint.category}</TableCell>
-                        <TableCell>{complaint.subject}</TableCell>
-                        <TableCell>
-                          <span className={`inline-block px-2 py-1 rounded text-xs font-semibold
-                            ${complaint.status === "Submitted" ? "bg-amber-100 text-amber-800" : 
-                            complaint.status === "In Progress" ? "bg-blue-100 text-blue-800" : 
-                            complaint.status === "Resolved" ? "bg-green-100 text-green-800" : 
-                            "bg-gray-100 text-gray-800"}`}>
-                            {complaint.status}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900">{complaints.length}</div>
+                  <div className="text-sm text-gray-500">Total Complaints</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {complaints.filter(c => c.status === "Submitted").length}
+                  </div>
+                  <div className="text-sm text-gray-500">Pending</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {complaints.filter(c => c.status === "In Progress").length}
+                  </div>
+                  <div className="text-sm text-gray-500">In Progress</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {complaints.filter(c => c.status === "Resolved").length}
+                  </div>
+                  <div className="text-sm text-gray-500">Resolved</div>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -1,9 +1,9 @@
 
-import { useState } from "react";
-import { useLocation, Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +15,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import ComplaintCategories from "@/components/ComplaintCategories";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   category: z.string().min(1, "Please select a category"),
@@ -23,23 +25,28 @@ const formSchema = z.object({
   location: z.string().optional(),
 });
 
+interface Complaint {
+  id: string;
+  created_at: string;
+  status: string;
+  category: string;
+  subject: string;
+  description: string;
+  location?: string;
+}
+
 const Grievances = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isLoggedIn } = useAuth();
   const queryParams = new URLSearchParams(location.search);
   const categoryParam = queryParams.get("category") || "";
 
   const [locationText, setLocationText] = useState("");
   const [coordinates, setCoordinates] = useState<{lat: number; lng: number} | null>(null);
-  const [complaintTicket, setComplaintTicket] = useState<{
-    id: string;
-    date: string;
-    status: string;
-    category: string;
-    subject: string;
-    description: string;
-  } | null>(null);
+  const [complaintTicket, setComplaintTicket] = useState<Complaint | null>(null);
   const [showTicket, setShowTicket] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,6 +58,12 @@ const Grievances = () => {
     },
   });
 
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate('/login');
+    }
+  }, [isLoggedIn, navigate]);
+
   const handleGetLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -58,7 +71,6 @@ const Grievances = () => {
           const { latitude, longitude } = position.coords;
           setCoordinates({ lat: latitude, lng: longitude });
           
-          // Reverse geocoding using free Nominatim API
           fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`)
             .then(response => response.json())
             .then(data => {
@@ -100,41 +112,64 @@ const Grievances = () => {
     }
   };
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    const complaintId = "MNC" + Math.floor(100000 + Math.random() * 900000);
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Generate complaint ticket
-    const ticket = {
-      id: complaintId,
-      date: today,
-      status: "Submitted",
-      category: data.category,
-      subject: data.subject,
-      description: data.description,
-    };
-    
-    // Save complaint to localStorage
-    const savedComplaints = localStorage.getItem("userComplaints");
-    const complaints = savedComplaints ? JSON.parse(savedComplaints) : [];
-    complaints.unshift(ticket); // Add new complaint at the beginning
-    localStorage.setItem("userComplaints", JSON.stringify(complaints));
-    
-    setComplaintTicket(ticket);
-    setShowTicket(true);
-    
-    toast({
-      title: "Complaint Registered",
-      description: `Your complaint has been registered successfully. Complaint ID: ${complaintId}`,
-    });
-    
-    // Reset form
-    form.reset();
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to submit a complaint",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { data: complaint, error } = await supabase
+        .from('complaints')
+        .insert({
+          user_id: user.id,
+          category: data.category,
+          subject: data.subject,
+          description: data.description,
+          location: data.location || null,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      setComplaintTicket(complaint);
+      setShowTicket(true);
+      
+      toast({
+        title: "Complaint Registered",
+        description: `Your complaint has been registered successfully. Complaint ID: ${complaint.id.slice(0, 8)}`,
+      });
+      
+      form.reset();
+      setLocationText("");
+    } catch (error) {
+      console.error('Error submitting complaint:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit complaint. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleViewAllComplaints = () => {
     navigate('/track-complaints');
   };
+
+  if (!isLoggedIn) {
+    return null;
+  }
 
   return (
     <Layout>
@@ -257,8 +292,12 @@ const Grievances = () => {
                   )}
                 />
                 
-                <Button type="submit" className="w-full bg-municipal-orange hover:bg-orange-600">
-                  Submit Complaint
+                <Button 
+                  type="submit" 
+                  className="w-full bg-municipal-orange hover:bg-orange-600"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Complaint"}
                 </Button>
               </form>
             </Form>
@@ -281,11 +320,11 @@ const Grievances = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-gray-500 text-sm">Complaint ID</p>
-                      <p className="font-medium">{complaintTicket.id}</p>
+                      <p className="font-medium">{complaintTicket.id.slice(0, 8)}</p>
                     </div>
                     <div>
                       <p className="text-gray-500 text-sm">Date</p>
-                      <p className="font-medium">{complaintTicket.date}</p>
+                      <p className="font-medium">{new Date(complaintTicket.created_at).toLocaleDateString()}</p>
                     </div>
                     <div>
                       <p className="text-gray-500 text-sm">Status</p>

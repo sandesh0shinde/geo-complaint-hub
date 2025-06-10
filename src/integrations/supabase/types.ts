@@ -9,7 +9,114 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      complaints: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string
+          id: string
+          location: string | null
+          status: string | null
+          subject: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description: string
+          id?: string
+          location?: string | null
+          status?: string | null
+          subject: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          location?: string | null
+          status?: string | null
+          subject?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      otp_verifications: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          expires_at: string
+          id: string
+          is_verified: boolean | null
+          otp_code: string
+          otp_type: string
+          phone_number: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          expires_at: string
+          id?: string
+          is_verified?: boolean | null
+          otp_code: string
+          otp_type: string
+          phone_number?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          expires_at?: string
+          id?: string
+          is_verified?: boolean | null
+          otp_code?: string
+          otp_type?: string
+          phone_number?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          email_verified: boolean | null
+          full_name: string
+          id: string
+          is_admin: boolean | null
+          phone_number: string | null
+          phone_verified: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          email_verified?: boolean | null
+          full_name: string
+          id: string
+          is_admin?: boolean | null
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          email_verified?: boolean | null
+          full_name?: string
+          id?: string
+          is_admin?: boolean | null
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
