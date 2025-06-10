@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
-import { User, Settings, FileText, Shield, Users, Cog } from "lucide-react";
+import { User, Settings, FileText, Shield, Users, Cog, UserPlus, UserMinus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,17 +23,33 @@ interface Complaint {
   location?: string;
 }
 
+interface AdminStats {
+  total_users: number;
+  total_admins: number;
+  total_complaints: number;
+  pending_complaints: number;
+  in_progress_complaints: number;
+  resolved_complaints: number;
+  complaints_last_30_days: number;
+  new_users_last_30_days: number;
+}
+
 const Profile = () => {
   const { user, userProfile, logout, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const [userComplaints, setUserComplaints] = useState<Complaint[]>([]);
   const [allComplaints, setAllComplaints] = useState<Complaint[]>([]);
+  const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
+  const [promoteEmail, setPromoteEmail] = useState("");
+  const [revokeEmail, setRevokeEmail] = useState("");
   const [userInfo, setUserInfo] = useState({
     full_name: userProfile?.full_name || "",
     phone_number: userProfile?.phone_number || "",
     address: userProfile?.address || "",
   });
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isPromoting, setIsPromoting] = useState(false);
+  const [isRevoking, setIsRevoking] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -55,6 +71,7 @@ const Profile = () => {
       fetchUserComplaints();
       if (isAdmin) {
         fetchAllComplaints();
+        fetchAdminStats();
       }
     }
   }, [user, isAdmin]);
@@ -98,6 +115,24 @@ const Profile = () => {
     }
   };
 
+  const fetchAdminStats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_dashboard_stats')
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error('Error fetching admin stats:', error);
+        return;
+      }
+
+      setAdminStats(data);
+    } catch (error) {
+      console.error('Error fetching admin stats:', error);
+    }
+  };
+
   const handleLogout = async () => {
     await logout();
     toast({
@@ -138,6 +173,68 @@ const Profile = () => {
       });
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handlePromoteUser = async () => {
+    if (!promoteEmail.trim()) return;
+
+    setIsPromoting(true);
+    try {
+      const { error } = await supabase.rpc('promote_user_to_admin', {
+        user_email: promoteEmail.trim()
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "User promoted",
+        description: `${promoteEmail} has been promoted to admin.`,
+      });
+      setPromoteEmail("");
+      fetchAdminStats();
+    } catch (error) {
+      console.error('Error promoting user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to promote user. Please check the email and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPromoting(false);
+    }
+  };
+
+  const handleRevokeAdmin = async () => {
+    if (!revokeEmail.trim()) return;
+
+    setIsRevoking(true);
+    try {
+      const { error } = await supabase.rpc('revoke_admin_privileges', {
+        user_email: revokeEmail.trim()
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Admin privileges revoked",
+        description: `Admin privileges for ${revokeEmail} have been revoked.`,
+      });
+      setRevokeEmail("");
+      fetchAdminStats();
+    } catch (error) {
+      console.error('Error revoking admin:', error);
+      toast({
+        title: "Error",
+        description: "Failed to revoke admin privileges. Please check the email and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRevoking(false);
     }
   };
 
@@ -305,60 +402,107 @@ const Profile = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <FileText className="h-5 w-5" />
-                      Complaint Overview
+                      System Statistics
                     </CardTitle>
                     <CardDescription>
-                      View and manage all user complaints
+                      Overview of system usage and activity
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span>Total Complaints:</span>
-                        <span className="font-semibold">{allComplaints.length}</span>
+                    {adminStats ? (
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>Total Users:</span>
+                          <span className="font-semibold">{adminStats.total_users}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Total Admins:</span>
+                          <span className="font-semibold">{adminStats.total_admins}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Total Complaints:</span>
+                          <span className="font-semibold">{adminStats.total_complaints}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Pending:</span>
+                          <span className="font-semibold">{adminStats.pending_complaints}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>In Progress:</span>
+                          <span className="font-semibold">{adminStats.in_progress_complaints}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Resolved:</span>
+                          <span className="font-semibold">{adminStats.resolved_complaints}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>New Users (30 days):</span>
+                          <span className="font-semibold">{adminStats.new_users_last_30_days}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Complaints (30 days):</span>
+                          <span className="font-semibold">{adminStats.complaints_last_30_days}</span>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Pending:</span>
-                        <span className="font-semibold">
-                          {allComplaints.filter(c => c.status === "Submitted").length}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>In Progress:</span>
-                        <span className="font-semibold">
-                          {allComplaints.filter(c => c.status === "In Progress").length}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Resolved:</span>
-                        <span className="font-semibold">
-                          {allComplaints.filter(c => c.status === "Resolved").length}
-                        </span>
-                      </div>
-                    </div>
+                    ) : (
+                      <p className="text-gray-500">Loading statistics...</p>
+                    )}
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Settings className="h-5 w-5" />
-                      Quick Actions
+                      <Users className="h-5 w-5" />
+                      User Management
                     </CardTitle>
                     <CardDescription>
-                      Common administrative tasks
+                      Promote users to admin or revoke admin privileges
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-2">
-                    <Button variant="outline" className="w-full">
-                      Generate Reports
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      Export Data
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      System Settings
-                    </Button>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="promote-email">Promote User to Admin</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="promote-email"
+                          type="email"
+                          placeholder="user@example.com"
+                          value={promoteEmail}
+                          onChange={(e) => setPromoteEmail(e.target.value)}
+                        />
+                        <Button 
+                          onClick={handlePromoteUser} 
+                          disabled={isPromoting || !promoteEmail.trim()}
+                          size="sm"
+                        >
+                          <UserPlus className="h-4 w-4 mr-1" />
+                          {isPromoting ? "Promoting..." : "Promote"}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="revoke-email">Revoke Admin Privileges</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="revoke-email"
+                          type="email"
+                          placeholder="admin@example.com"
+                          value={revokeEmail}
+                          onChange={(e) => setRevokeEmail(e.target.value)}
+                        />
+                        <Button 
+                          onClick={handleRevokeAdmin} 
+                          disabled={isRevoking || !revokeEmail.trim()}
+                          variant="destructive"
+                          size="sm"
+                        >
+                          <UserMinus className="h-4 w-4 mr-1" />
+                          {isRevoking ? "Revoking..." : "Revoke"}
+                        </Button>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
