@@ -100,18 +100,31 @@ const Layout = ({ children }: LayoutProps) => {
       </header>
 
       {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200 w-full">
+      <nav className="bg-background border-b border-border w-full" role="navigation" aria-label="Main navigation">
         <div className="container mx-auto">
           <div className="flex justify-center w-full">
             <div className="flex w-full justify-center">
-              <Link to="/about" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 text-center flex-1">
+              <Link 
+                to="/about" 
+                className="px-4 md:px-6 py-4 border-r border-border hover:bg-accent hover:text-accent-foreground text-center flex-1 transition-colors focus:outline-none focus:bg-accent"
+                aria-label="About Municipal Corporation"
+              >
                 About MNC
               </Link>
               
               <div 
-                className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 cursor-pointer relative group text-center flex-1"
+                className="px-4 md:px-6 py-4 border-r border-border hover:bg-accent hover:text-accent-foreground cursor-pointer relative group text-center flex-1 transition-colors"
                 onMouseEnter={() => setZonalOfficesOpen(true)}
                 onMouseLeave={() => setZonalOfficesOpen(false)}
+                role="button"
+                tabIndex={0}
+                aria-expanded={zonalOfficesOpen}
+                aria-haspopup="true"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    setZonalOfficesOpen(!zonalOfficesOpen);
+                  }
+                }}
               >
                 <div className="flex items-center justify-center">
                   Zonal offices
@@ -119,12 +132,12 @@ const Layout = ({ children }: LayoutProps) => {
                 </div>
                 
                 {zonalOfficesOpen && (
-                  <div className="absolute left-0 mt-4 w-48 bg-white shadow-lg z-10 border border-gray-200">
+                  <div className="absolute left-0 mt-4 w-48 bg-popover shadow-lg z-50 border border-border rounded-md">
                     {zonalOffices.map((office) => (
                       <Link 
                         key={office.id}
                         to={`/zonal-office/${office.id}`}
-                        className="block px-4 py-2 hover:bg-gray-100"
+                        className="block px-4 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-popover-foreground"
                       >
                         {office.name}
                       </Link>
@@ -134,9 +147,18 @@ const Layout = ({ children }: LayoutProps) => {
               </div>
               
               <div 
-                className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 cursor-pointer relative text-center flex-1"
+                className="px-4 md:px-6 py-4 border-r border-border hover:bg-accent hover:text-accent-foreground cursor-pointer relative text-center flex-1 transition-colors"
                 onMouseEnter={() => setDepartmentsOpen(true)}
                 onMouseLeave={() => setDepartmentsOpen(false)}
+                role="button"
+                tabIndex={0}
+                aria-expanded={departmentsOpen}
+                aria-haspopup="true"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    setDepartmentsOpen(!departmentsOpen);
+                  }
+                }}
               >
                 <div className="flex items-center justify-center">
                   Departments
@@ -144,12 +166,12 @@ const Layout = ({ children }: LayoutProps) => {
                 </div>
                 
                 {departmentsOpen && (
-                  <div className="absolute left-0 mt-4 w-48 bg-white shadow-lg z-10 border border-gray-200">
+                  <div className="absolute left-0 mt-4 w-48 bg-popover shadow-lg z-50 border border-border rounded-md">
                     {departments.map((dept) => (
                       <Link 
                         key={dept.id}
                         to={`/department/${dept.id}`}
-                        className="block px-4 py-2 hover:bg-gray-100"
+                        className="block px-4 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-popover-foreground"
                       >
                         {dept.name}
                       </Link>
@@ -158,15 +180,27 @@ const Layout = ({ children }: LayoutProps) => {
                 )}
               </div>
               
-              <Link to="/services" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 text-center flex-1">
+              <Link 
+                to="/services" 
+                className="px-4 md:px-6 py-4 border-r border-border hover:bg-accent hover:text-accent-foreground text-center flex-1 transition-colors focus:outline-none focus:bg-accent"
+                aria-label="Services"
+              >
                 Services
               </Link>
               
-              <Link to="/grievances" className="px-6 py-4 border-r border-gray-200 hover:bg-gray-100 text-center flex-1">
+              <Link 
+                to="/grievances" 
+                className="px-4 md:px-6 py-4 border-r border-border hover:bg-accent hover:text-accent-foreground text-center flex-1 transition-colors focus:outline-none focus:bg-accent"
+                aria-label="Grievances"
+              >
                 Grievances
               </Link>
               
-              <Link to="/contact" className="px-6 py-4 border-gray-200 hover:bg-gray-100 text-center flex-1">
+              <Link 
+                to="/contact" 
+                className="px-4 md:px-6 py-4 hover:bg-accent hover:text-accent-foreground text-center flex-1 transition-colors focus:outline-none focus:bg-accent"
+                aria-label="Contact us"
+              >
                 Contact us
               </Link>
             </div>
@@ -183,7 +217,7 @@ const Layout = ({ children }: LayoutProps) => {
       </div>
 
       {/* Main Content */}
-      <main className="flex-grow bg-gray-50">
+      <main className="flex-grow bg-muted/50" role="main">
         {children}
       </main>
 
