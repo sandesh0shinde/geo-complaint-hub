@@ -64,12 +64,12 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				municipal: {
-					orange: '#F9A826',
-					green: '#E8F5E9',
-					text: '#333333',
-					light: '#FFFFFF',
-					header: '#F9A826',
-					footer: '#333333',
+					orange: 'hsl(39 94% 56%)',
+					green: 'hsl(122 39% 93%)', 
+					text: 'hsl(0 0% 20%)',
+					light: 'hsl(0 0% 100%)',
+					header: 'hsl(39 94% 56%)',
+					footer: 'hsl(0 0% 20%)',
 				},
 			},
 			borderRadius: {

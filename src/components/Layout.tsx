@@ -61,35 +61,35 @@ const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <header className="bg-municipal-orange">
+      <header className="bg-primary">
         <div className="container mx-auto py-4 px-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
-              <Building className="h-10 w-10 mr-3 text-white" />
+              <Building className="h-10 w-10 mr-3 text-primary-foreground" />
               <div>
-                <h1 className="text-2xl font-bold text-municipal-text">MUNICIPAL CORPORATION</h1>
-                <p className="text-sm text-municipal-text">Government of Maharashtra</p>
+                <h1 className="text-2xl font-bold text-primary-foreground">MUNICIPAL CORPORATION</h1>
+                <p className="text-sm text-primary-foreground/80">Government of Maharashtra</p>
               </div>
             </div>
 
             <div className="flex space-x-10">
-              <Link to="/" className="flex flex-col items-center text-white">
+              <Link to="/" className="flex flex-col items-center text-primary-foreground hover:text-primary-foreground/80 transition-colors">
                 <Home className="h-6 w-6" />
                 <span className="text-sm">Home</span>
               </Link>
 
-              <Link to="/services" className="flex flex-col items-center text-white">
+              <Link to="/services" className="flex flex-col items-center text-primary-foreground hover:text-primary-foreground/80 transition-colors">
                 <Ticket className="h-6 w-6" />
                 <span className="text-sm">Ticket</span>
               </Link>
 
               {isLoggedIn ? (
-                <Link to="/profile" className="flex flex-col items-center text-white">
+                <Link to="/profile" className="flex flex-col items-center text-primary-foreground hover:text-primary-foreground/80 transition-colors">
                   <User className="h-6 w-6" />
                   <span className="text-sm">Profile</span>
                 </Link>
               ) : (
-                <Link to="/login" className="flex flex-col items-center text-white">
+                <Link to="/login" className="flex flex-col items-center text-primary-foreground hover:text-primary-foreground/80 transition-colors">
                   <User className="h-6 w-6" />
                   <span className="text-sm">Sign Up</span>
                 </Link>
@@ -175,11 +175,11 @@ const Layout = ({ children }: LayoutProps) => {
       </nav>
 
       {/* Alert Banner */}
-      <div className="bg-municipal-green py-3 px-4 flex justify-between items-center">
-        <p className="text-municipal-text">
+      <div className="bg-accent py-3 px-4 flex justify-between items-center">
+        <p className="text-accent-foreground">
           Welcome to Real-Time Public Service Management System! You can register your complaints here.
         </p>
-        <button className="text-municipal-text focus:outline-none">×</button>
+        <button className="text-accent-foreground hover:text-accent-foreground/80 focus:outline-none">×</button>
       </div>
 
       {/* Main Content */}
@@ -188,7 +188,7 @@ const Layout = ({ children }: LayoutProps) => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-municipal-footer text-white py-8">
+      <footer className="bg-muted text-muted-foreground py-8">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
@@ -210,7 +210,7 @@ const Layout = ({ children }: LayoutProps) => {
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
-              <address className="text-sm not-italic">
+              <address className="text-sm not-italic text-muted-foreground">
                 Municipal Corporation Building<br />
                 Main Street, Maharashtra<br />
                 India<br />
@@ -220,13 +220,13 @@ const Layout = ({ children }: LayoutProps) => {
               </address>
             </div>
           </div>
-          <div className="border-t border-gray-600 mt-6 pt-6 flex justify-between items-center">
-            <p className="text-sm">© 2023 Municipal Corporation. All rights reserved.</p>
+          <div className="border-t border-border mt-6 pt-6 flex justify-between items-center">
+            <p className="text-sm text-muted-foreground">© 2025 Municipal Corporation. All rights reserved.</p>
             <div className="flex space-x-4">
-              <a href="#" className="text-white hover:text-municipal-orange">
+              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                 <img src="/placeholder.svg" alt="Facebook" className="h-5 w-5" />
               </a>
-              <a href="#" className="text-white hover:text-municipal-orange">
+              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                 <img src="/placeholder.svg" alt="Twitter" className="h-5 w-5" />
               </a>
             </div>

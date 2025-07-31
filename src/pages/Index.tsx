@@ -92,21 +92,21 @@ const Index = () => {
     <Layout>
       <div className="container mx-auto py-8 px-4">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-foreground mb-4">
             Municipal Grievance Portal
           </h1>
-          <p className="text-lg text-gray-600 mb-8">
+          <p className="text-lg text-muted-foreground mb-8">
             Register your complaint and track its progress
           </p>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 items-center justify-center my-8">
           <div className="relative w-full max-w-2xl">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+            <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Describe your complaint..."
-              className="pl-10 py-6 rounded-full border-gray-300"
+              className="pl-10 py-6 rounded-full"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleKeyPress}
@@ -114,7 +114,7 @@ const Index = () => {
           </div>
           <Button 
             onClick={handleSearch}
-            className="bg-municipal-orange hover:bg-orange-600 text-white flex items-center gap-2 py-6 px-6 rounded-full"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center gap-2 py-6 px-6 rounded-full"
           >
             <Search className="h-5 w-5" />
             Submit Complaint
@@ -134,13 +134,13 @@ const Index = () => {
         </div>
 
         {!isLoggedIn && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8 text-center">
-            <p className="text-blue-800 mb-2">
+          <div className="bg-accent border border-border rounded-lg p-4 mb-8 text-center">
+            <p className="text-accent-foreground mb-2">
               To submit and track complaints, please log in to your account.
             </p>
             <Button 
               onClick={() => navigate('/login')}
-              className="bg-municipal-orange hover:bg-orange-600"
+              className="bg-primary hover:bg-primary/90"
             >
               Login / Register
             </Button>
