@@ -124,21 +124,22 @@ export type Database = {
       }
     }
     Views: {
-      admin_dashboard_stats: {
-        Row: {
-          complaints_last_30_days: number | null
-          in_progress_complaints: number | null
-          new_users_last_30_days: number | null
-          pending_complaints: number | null
-          resolved_complaints: number | null
-          total_admins: number | null
-          total_complaints: number | null
-          total_users: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
+      get_admin_dashboard_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_users: number
+          total_admins: number
+          total_complaints: number
+          pending_complaints: number
+          in_progress_complaints: number
+          resolved_complaints: number
+          complaints_last_30_days: number
+          new_users_last_30_days: number
+        }[]
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean

@@ -105,16 +105,14 @@ const Profile = () => {
   const fetchAdminStats = useCallback(async () => {
     try {
       const { data, error } = await supabase
-        .from('admin_dashboard_stats')
-        .select('*')
-        .single();
+        .rpc('get_admin_dashboard_stats');
 
       if (error) {
         console.error('Error fetching admin stats:', error);
         return;
       }
 
-      setAdminStats(data);
+      setAdminStats(data[0] || null); // Function returns an array with one result
     } catch (error) {
       console.error('Error fetching admin stats:', error);
     }
