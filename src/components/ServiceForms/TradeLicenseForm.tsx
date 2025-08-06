@@ -65,7 +65,6 @@ export default function TradeLicenseForm() {
       description: `Your application ID is: ${applicationId}. You will receive updates on your email.`,
     });
     
-    console.log(data);
     form.reset();
   }
 

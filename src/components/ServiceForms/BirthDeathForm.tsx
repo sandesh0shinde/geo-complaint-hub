@@ -65,7 +65,6 @@ export default function BirthDeathForm() {
       description: `Your application ID is: ${applicationId}. Please save this for future reference.`,
     });
     
-    console.log(data);
     form.reset();
   }
 

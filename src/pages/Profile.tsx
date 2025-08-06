@@ -74,13 +74,12 @@ const Profile = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching complaints:', error);
         return;
       }
 
       setUserComplaints(data || []);
     } catch (error) {
-      console.error('Error fetching complaints:', error);
+      // Handle error silently
     }
   }, [user]);
 
@@ -92,13 +91,12 @@ const Profile = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching all complaints:', error);
         return;
       }
 
       setAllComplaints(data || []);
     } catch (error) {
-      console.error('Error fetching all complaints:', error);
+      // Handle error silently
     }
   }, []);
 
@@ -108,13 +106,12 @@ const Profile = () => {
         .rpc('get_admin_dashboard_stats');
 
       if (error) {
-        console.error('Error fetching admin stats:', error);
         return;
       }
 
       setAdminStats(data[0] || null); // Function returns an array with one result
     } catch (error) {
-      console.error('Error fetching admin stats:', error);
+      // Handle error silently
     }
   }, []);
 
@@ -159,11 +156,10 @@ const Profile = () => {
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
       });
-    } catch (error) {
-      console.error('Error updating profile:', error);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update profile. Please try again.",
+        description: error.message || "Failed to update profile. Please try again.",
         variant: "destructive",
       });
     } finally {

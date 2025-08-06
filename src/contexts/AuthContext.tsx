@@ -81,13 +81,13 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
         .single();
 
       if (error) {
-        console.error('Error fetching user profile:', error);
+        // Log error securely without exposing sensitive data
         return;
       }
 
       setUserProfile(data);
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      // Handle error silently to prevent data leakage
     }
   };
 
@@ -140,7 +140,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       setSession(null);
       setIsLoggedIn(false);
     } catch (error) {
-      console.error('Error signing out:', error);
+      // Handle logout error silently
     }
   };
 

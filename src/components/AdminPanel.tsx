@@ -44,10 +44,28 @@ export const AdminPanel = ({ allComplaints, adminStats, onRefreshStats }: AdminP
   const handlePromoteUser = async () => {
     if (!promoteEmail.trim()) return;
 
+    // Validate government email domain
+    const governmentDomains = ['@municipal.gov', '@gov.in', '@city.gov'];
+    const hasValidDomain = governmentDomains.some(domain => 
+      promoteEmail.toLowerCase().includes(domain)
+    );
+
+    if (!hasValidDomain) {
+      toast({
+        title: "Invalid Email Domain",
+        description: "Admin users must have a government domain email (@municipal.gov, @gov.in, @city.gov)",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsPromoting(true);
     try {
-      const { error } = await supabase.rpc('promote_user_to_admin', {
-        user_email: promoteEmail.trim()
+      const { error } = await supabase.rpc('promote_user_to_admin_secure', {
+        user_email: promoteEmail.trim(),
+        justification: `Admin promotion via dashboard for ${promoteEmail}`,
+        ip_address: null,
+        user_agent: navigator.userAgent
       });
 
       if (error) {
@@ -60,11 +78,10 @@ export const AdminPanel = ({ allComplaints, adminStats, onRefreshStats }: AdminP
       });
       setPromoteEmail("");
       onRefreshStats();
-    } catch (error) {
-      console.error('Error promoting user:', error);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to promote user. Please check the email and try again.",
+        description: error.message || "Failed to promote user. Please check the email and try again.",
         variant: "destructive",
       });
     } finally {
@@ -91,11 +108,10 @@ export const AdminPanel = ({ allComplaints, adminStats, onRefreshStats }: AdminP
       });
       setRevokeEmail("");
       onRefreshStats();
-    } catch (error) {
-      console.error('Error revoking admin:', error);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to revoke admin privileges. Please check the email and try again.",
+        description: error.message || "Failed to revoke admin privileges. Please check the email and try again.",
         variant: "destructive",
       });
     } finally {

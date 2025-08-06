@@ -83,8 +83,7 @@ const Grievances = () => {
                 description: `Address captured successfully`,
               });
             })
-            .catch(error => {
-              console.error("Error fetching location details:", error);
+            .catch(() => {
               const locText = `Lat: ${latitude.toFixed(6)}, Long: ${longitude.toFixed(6)}`;
               setLocationText(locText);
               form.setValue("location", locText);
@@ -125,15 +124,36 @@ const Grievances = () => {
     setIsSubmitting(true);
 
     try {
+      // Check rate limit before submission
+      const { data: rateLimitCheck, error: rateLimitError } = await supabase
+        .rpc('check_rate_limit', {
+          p_user_id: user.id,
+          p_action_type: 'complaint_submission',
+          p_max_actions: 5,
+          p_window_minutes: 60
+        });
+
+      if (rateLimitError || !rateLimitCheck) {
+        toast({
+          title: "Rate Limit Exceeded",
+          description: "You can only submit 5 complaints per hour. Please try again later.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Sanitize input data
+      const sanitizedData = {
+        user_id: user.id,
+        category: data.category.trim(),
+        subject: data.subject.trim(),
+        description: data.description.trim(),
+        location: data.location ? data.location.trim() : null,
+      };
+
       const { data: complaint, error } = await supabase
         .from('complaints')
-        .insert({
-          user_id: user.id,
-          category: data.category,
-          subject: data.subject,
-          description: data.description,
-          location: data.location || null,
-        })
+        .insert(sanitizedData)
         .select()
         .single();
 
@@ -151,11 +171,10 @@ const Grievances = () => {
       
       form.reset();
       setLocationText("");
-    } catch (error) {
-      console.error('Error submitting complaint:', error);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to submit complaint. Please try again.",
+        description: error.message || "Failed to submit complaint. Please try again.",
         variant: "destructive",
       });
     } finally {

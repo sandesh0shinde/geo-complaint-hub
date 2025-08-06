@@ -57,7 +57,6 @@ export default function WaterBillForm() {
       description: `Your transaction ID is: ${applicationId}. You will receive payment confirmation on your email.`,
     });
     
-    console.log(data);
     form.reset();
   }
 

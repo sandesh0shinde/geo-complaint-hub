@@ -58,7 +58,6 @@ export default function PropertyTaxForm() {
       description: `Your reference ID is: ${applicationId}. You will receive payment details on your email.`,
     });
     
-    console.log(data);
     form.reset();
   }
 
